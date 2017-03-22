@@ -24,10 +24,15 @@ public class PollService extends IntentService {
     private static final String TAG = "PollService";
     private static final int POLL_INTERNAL = 1000 * 15; // 15s
 
+    public static final String PREF_IS_ALARM_ON = "isAlarmOn";
+    public static final String ACTION_SHOW_NOTIFICATION = "com.example.hoanbk.photogallery.SHOW_NOTIFICATION";
+    public static final String PERM_PRIVATE = "com.example.hoanbk.photogallery.PRIVATE";
+
     public PollService() {super(TAG);}
 
     @Override
     protected void onHandleIntent(Intent intent) {
+        Log.i(TAG, "Received an intent");
         ConnectivityManager cm = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
         @SuppressWarnings("deprecation")
         boolean isNetworkAvailable = cm.getBackgroundDataSetting() && (cm.getActiveNetworkInfo() != null);
@@ -67,11 +72,12 @@ public class PollService extends IntentService {
             NotificationManager notificationManager =
                     (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
             notificationManager.notify(0, notification);
+//            sendBroadcast(new Intent(ACTION_SHOW_NOTIFICATION));
+            sendBroadcast(new Intent(ACTION_SHOW_NOTIFICATION), PERM_PRIVATE);
         } else {
             Log.i(TAG, "Got an old result: " + resultId);
         }
         prefs.edit().putString(FlickrFetchr.PREF_LAST_RESULT_ID, resultId).apply();
-        Log.i(TAG, "Received an intent");
     }
 
     public static void setServiceAlarm(Context context, boolean isOn) {
@@ -84,6 +90,11 @@ public class PollService extends IntentService {
             alarmManager.cancel(pi);
             pi.cancel();
         }
+
+        PreferenceManager.getDefaultSharedPreferences(context)
+                .edit()
+                .putBoolean(PollService.PREF_IS_ALARM_ON, isOn)
+                .apply();
     }
 
     public static boolean isServiceAlarmOn(Context context) {
