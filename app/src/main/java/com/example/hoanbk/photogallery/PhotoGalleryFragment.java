@@ -3,8 +3,10 @@ package com.example.hoanbk.photogallery;
 import android.app.Activity;
 import android.app.SearchManager;
 import android.app.SearchableInfo;
+import android.app.VoiceInteractor;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -50,6 +52,9 @@ public class PhotoGalleryFragment extends Fragment {
 
         Log.d(TAG, "onCreate()");
         updateItems();
+//        Intent i = new Intent(getActivity(), PollService.class);
+//        getActivity().startService(i);
+//        PollService.setServiceAlarm(getActivity(), true);
         mThumbnailThread = new ThumbnailDownloader<>(new Handler());
         mThumbnailThread.setListener(new ThumbnailDownloader.IListener<ImageView>() {
             public void onThumbnailDownloaded(ImageView imageView, Bitmap thumbnail) {
@@ -75,6 +80,8 @@ public class PhotoGalleryFragment extends Fragment {
 
         return v;
     }
+
+
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
@@ -106,8 +113,27 @@ public class PhotoGalleryFragment extends Fragment {
                 updateItems();
                 return true;
             }
+            case R.id.menu_item_toggle_polling:{
+                boolean shouldStartAlarm = !PollService.isServiceAlarmOn(getActivity());
+                PollService.setServiceAlarm(getActivity(), shouldStartAlarm);
+                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+                    getActivity().invalidateOptionsMenu();
+                }
+                return true;
+            }
             default:
                 return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
+    public void onPrepareOptionsMenu(Menu menu) {
+        super.onPrepareOptionsMenu(menu);
+        MenuItem toggleItem = menu.findItem(R.id.menu_item_toggle_polling);
+        if (PollService.isServiceAlarmOn(getActivity())) {
+            toggleItem.setTitle(R.string.stop_polling);
+        } else {
+            toggleItem.setTitle(R.string.start_polling);
         }
     }
 
@@ -147,7 +173,7 @@ public class PhotoGalleryFragment extends Fragment {
         protected ArrayList<GalleryItem> doInBackground(Void... params) {
             Activity activity = getActivity();
             if (activity == null) {
-                return new ArrayList<GalleryItem>();
+                return new ArrayList<>();
             }
             String query = PreferenceManager.getDefaultSharedPreferences(activity)
                     .getString(FlickrFetchr.PREF_SEARCH_QUERY, null);
