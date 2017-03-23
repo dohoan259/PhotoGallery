@@ -30,9 +30,22 @@ public class GalleryItem {
         mUrl = url;
     }
 
+    public String getOwner() {
+        return mOwner;
+    }
+
+    public void setOwner(String owner) {
+        mOwner = owner;
+    }
+
+    public String getPhotoPageUrl() {
+        return "http://www.flickr.com/photos/" + mOwner + "/" + mId;
+    }
+
     private String mCaption;
     private String mId;
     private String mUrl;
+    private String mOwner;
 
     @Override
     public String toString() {
